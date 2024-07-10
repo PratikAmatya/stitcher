@@ -4,40 +4,39 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      height: 90vh;
       width: 100vw;
     "
   >
-    <v-card
-      min-width="500"
-      max-width="900"
-      min-height="300"
-      class="submit-card"
-    >
-      <v-form ref="form">
-        <section class="pb-8">
-          <h2>Stitcher</h2>
-        </section>
-        <section class="d-block">
-          <v-file-input
-            label="File input"
-            v-model="imgFile"
-            style="overflow-x: hidden; width: 25rem"
-            variant="underlined"
-            :rules="[rules.required]"
-          ></v-file-input>
-        </section>
+    <v-card class="submit-card">
+      <section>
+        <h2>Stitcher</h2>
+      </section>
+      <section>
+        <v-file-input
+          label="Click here to select Image"
+          v-model="imgFile"
+          variant="underlined"
+          :error="errorObj.hasError"
+          :show-size="true"
+          prepend-icon=""
+          :error-messages="errorObj.errorMessage"
+        ></v-file-input>
+      </section>
 
-        <!-- * Submit Button -->
-        <section class="mt-5">
-          <button @click="handleSubmit">
-            Submit
-            <div class="arrow-wrapper">
-              <div class="arrow"></div>
-            </div>
-          </button>
-        </section>
-      </v-form>
+      <!-- * Submit Button -->
+      <section class="mt-5">
+        <v-btn
+          variant="flat"
+          @click="handleSubmit"
+          append-icon="mdi-arrow-right"
+          color="#645bff"
+          class="submit-button"
+          :loading="isLoading"
+        >
+          Submit
+        </v-btn>
+      </section>
     </v-card>
   </section>
 </template>
@@ -49,38 +48,63 @@ export default {
   data() {
     return {
       imgFile: null,
-      rules: {
-        required: (value) => !!value || "Required.",
+      validFileTypes: ["jpg", "jpeg", "png", "webp", "heic", "heif"],
+      errorObj: {
+        hasError: false,
+        errorMessage: [],
       },
+      isLoading: false,
     };
   },
+  watch: {
+    imgFile() {
+      this.validateFile();
+    },
+  },
   methods: {
-    async handleSubmit() {
-      const { valid } = await this.$refs.form.validate();
-      if (valid) {
-        const formData = new FormData();
-        formData.append("file", this.imgFile);
+    validateFile() {
+      if (!this.imgFile) {
+        this.errorObj.hasError = true;
+        this.errorObj.errorMessage = ["Please select an image"];
+      } else {
+        // Extract the file extension
+        const fileExtension = this.imgFile.type.split("/").pop().toLowerCase();
 
-        await apiManager.axios
-          .post("/v1/models", newModel)
-          .then(() => {
-            return "success";
-          })
-          .catch((err) => {
-            return (
-              err.response.data.message ||
-              err.response.data.error.message ||
-              "Network error"
-            );
-          });
-        await axios({
-          method: "POST",
-          url: "https://api.stitcher.twelveletter.co/stitcher",
-          data: formData,
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        console.log(fileExtension);
+        // Check if the extension is in the array of valid image file types
+        if (this.validFileTypes.includes(fileExtension)) {
+          this.errorObj.hasError = false;
+          this.errorObj.errorMessage = [];
+        } else {
+          this.errorObj.hasError = true;
+          this.errorObj.errorMessage = ["Please select a valid image"];
+        }
+      }
+    },
+    async handleSubmit() {
+      this.validateFile();
+
+      if (!this.errorObj.hasError) {
+        const formData = new FormData();
+        formData.append("image", this.imgFile);
+
+        this.isLoading = true;
+
+        const response = await axios.post(
+          "https://api.stitcher.twelveletter.co/stitcher",
+          formData,
+          { responseType: "blob" }
+        );
+
+        this.isLoading = false;
+        // Handle the response (which is a blob)
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "assets.zip"); // specify the filename
+        document.body.appendChild(link);
+        link.click();
+        link.remove(); // Clean up the element
       }
     },
   },
@@ -88,74 +112,35 @@ export default {
 </script>
 
 <style>
+.submit-button:hover {
+  background: #111 !important;
+}
 .submit-card {
   display: flex !important;
   justify-content: center !important;
-  align-items: center !important;
+  align-items: left !important;
+  padding: 2rem !important;
   flex-direction: column;
-  border-radius: 0 !important;
+  height: 40%;
+  width: 50%;
   box-shadow: rgba(0, 0, 0, 0.2) 0px 12px 28px 0px,
     rgba(0, 0, 0, 0.1) 0px 2px 4px 0px,
     rgba(255, 255, 255, 0.05) 0px 0px 0px 1px inset !important;
 }
 
-button {
-  --primary-color: #645bff;
-  --secondary-color: #fff;
-  --hover-color: #111;
-  --arrow-width: 10px;
-  --arrow-stroke: 2px;
-  box-sizing: border-box;
-  border: 0;
-  border-radius: 0px;
-  color: var(--secondary-color);
-  padding: 1em 1.8em;
-  background: var(--primary-color);
-  display: flex;
-  transition: 0.2s background;
-  align-items: center;
-  gap: 0.6em;
-  font-weight: bold;
+/* On screens that are 992px wide or less, go from four columns to two columns */
+@media screen and (max-width: 992px) {
+  .submit-card {
+    width: 100%;
+    height: 40%;
+  }
 }
 
-button .arrow-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-button .arrow {
-  margin-top: 1px;
-  width: var(--arrow-width);
-  background: var(--primary-color);
-  height: var(--arrow-stroke);
-  position: relative;
-  transition: 0.2s;
-}
-
-button .arrow::before {
-  content: "";
-  box-sizing: border-box;
-  position: absolute;
-  border: solid var(--secondary-color);
-  border-width: 0 var(--arrow-stroke) var(--arrow-stroke) 0;
-  display: inline-block;
-  top: -3px;
-  right: 3px;
-  transition: 0.2s;
-  padding: 3px;
-  transform: rotate(-45deg);
-}
-
-button:hover {
-  background-color: var(--hover-color);
-}
-
-button:hover .arrow {
-  background: var(--secondary-color);
-}
-
-button:hover .arrow:before {
-  right: 0;
+/* On screens that are 600px wide or less, make the columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 600px) {
+  .submit-card {
+    width: 100%;
+    height: 50%;
+  }
 }
 </style>

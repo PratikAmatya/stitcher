@@ -2,6 +2,7 @@
   <v-app>
     <v-main class="main">
       <SubmitForm />
+      <AppFooter />
     </v-main>
   </v-app>
 </template>
@@ -27,5 +28,6 @@ export default {
     hsl(271deg 74% 91%) 63%,
     hsl(240deg 11% 96%) 100%
   );
+  /* background-color: #111; */
 }
 </style>

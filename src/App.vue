@@ -9,11 +9,13 @@
 
 <script>
 import SubmitForm from "@/components/SubmitForm.vue";
+import AppFooter from "@/components/AppFooter.vue";
 
 export default {
   name: "SubmitForm",
   components: {
     SubmitForm,
+    AppFooter,
   },
 };
 </script>

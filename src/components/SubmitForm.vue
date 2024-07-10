@@ -19,6 +19,7 @@
           variant="underlined"
           :error="errorObj.hasError"
           :show-size="true"
+          class="mt-4"
           prepend-icon=""
           :error-messages="errorObj.errorMessage"
         ></v-file-input>
@@ -70,7 +71,6 @@ export default {
         // Extract the file extension
         const fileExtension = this.imgFile.type.split("/").pop().toLowerCase();
 
-        console.log(fileExtension);
         // Check if the extension is in the array of valid image file types
         if (this.validFileTypes.includes(fileExtension)) {
           this.errorObj.hasError = false;
@@ -91,7 +91,7 @@ export default {
         this.isLoading = true;
 
         const response = await axios.post(
-          "https://api.stitcher.twelveletter.co/stitcher",
+          import.meta.env.VITE_BASE_URL,
           formData,
           { responseType: "blob" }
         );

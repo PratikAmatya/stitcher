@@ -2,17 +2,20 @@
   <v-app>
     <v-main class="main">
       <SubmitForm />
+      <AppFooter />
     </v-main>
   </v-app>
 </template>
 
 <script>
 import SubmitForm from "@/components/SubmitForm.vue";
+import AppFooter from "@/components/AppFooter.vue";
 
 export default {
   name: "SubmitForm",
   components: {
     SubmitForm,
+    AppFooter,
   },
 };
 </script>
@@ -27,5 +30,6 @@ export default {
     hsl(271deg 74% 91%) 63%,
     hsl(240deg 11% 96%) 100%
   );
+  /* background-color: #111; */
 }
 </style>
